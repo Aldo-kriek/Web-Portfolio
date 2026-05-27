@@ -10,21 +10,30 @@ Welcome to the documentation for my high-performance web portfolio. This guide h
 🎨 Aesthetic & Feature Highlights
 This portfolio is engineered to blend high-performance software principles with a sleek, "cyber-tech" aesthetic.
 
+<img width="1882" height="909" alt="image" src="https://github.com/user-attachments/assets/3119a423-84ee-419a-b219-3ad59db6ea63" />
+
 Adaptive Theme Engine: Experience 35+ unique color palettes. Use the Palette Icon in the navigation bar to instantly transform the site’s color scheme, border glows, and typography atmosphere.
 
 Immersive Startup Sequence: The site begins with a custom, CSS-animated robot boot-up sequence, complete with a progress bar and status telemetry, ensuring a premium "system-ready" introduction.
+
+<img width="1870" height="915" alt="image" src="https://github.com/user-attachments/assets/051e39b1-74d7-43af-a745-5d03fa81d996" />
+
 
 Tactile 3D Project Grid: Hover over any project card to see it react to your cursor. The cards utilize 3D perspective transforms to tilt and rotate, creating a sophisticated, high-end feel.
 
 High-Tech UI Tracers: Observe the animated light-strips (tracers) that run along the border of the site. They are programmed to navigate the layout, reinforcing the futuristic, digital infrastructure theme.
 
+
+<img width="1878" height="908" alt="image" src="https://github.com/user-attachments/assets/9face92b-1890-4655-a102-e74cf94832ef" />
+
+
 Intuitive Category Filtering: Easily sort through my work—Infrastructure, Algorithms, or Simulations—with smooth, GSAP-powered layout animations that keep the transition fluid.
 
 Interactive Communication: The contact form provides real-time "system feedback," so you know exactly when your message packet has been transmitted.
 
-<img width="1882" height="909" alt="image" src="https://github.com/user-attachments/assets/3119a423-84ee-419a-b219-3ad59db6ea63" />
-<img width="1870" height="915" alt="image" src="https://github.com/user-attachments/assets/051e39b1-74d7-43af-a745-5d03fa81d996" />
-<img width="1878" height="908" alt="image" src="https://github.com/user-attachments/assets/9face92b-1890-4655-a102-e74cf94832ef" />
+
+
+
 
 
 🚀 How to Run the Portfolio
