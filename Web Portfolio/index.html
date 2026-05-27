@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aldo Kriek | Software Developer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700;800&family=JetBrains+Mono:wght@300;500;800&display=swap');
+
+        :root {
+            --bg-void: #02040a;
+            --bg-surface: #0a0f1a;
+            --sky-bright: #00d2ff;
+            --sky-glow: rgba(0, 210, 255, 0.6);
+            --text-main: #e2e8f0;
+            --text-dim: #94a3b8;
+            --border-ui: rgba(0, 210, 255, 0.15);
+            --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+            --frame-padding: 30px;
+            --tracer-size: 4px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        html { scroll-behavior: smooth; }
+        body { background-color: var(--bg-void); color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; line-height: 1.6; transition: background-color 0.5s ease; }
+
+        /* --- THEME CONTROLS --- */
+        .theme-trigger-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 34px; height: 34px; background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-ui); border-radius: 50%;
+            cursor: pointer; transition: all 0.3s var(--ease-premium); outline: none; margin-left: 10px;
+        }
+        .theme-trigger-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--sky-bright); transform: rotate(15deg); }
+
+        .theme-display-capsule {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            padding: 0 14px; height: 34px; display: flex; align-items: center;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-ui);
+            border-radius: 20px; pointer-events: none;
+        }
+
+        .theme-label { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: var(--sky-bright); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+
+        #theme-panel {
+            position: fixed; right: -300px; top: 0; width: 280px; height: 100vh;
+            background: rgba(2, 4, 10, 0.98); backdrop-filter: blur(25px);
+            border-left: 1px solid var(--border-ui); z-index: 10005; padding: 80px 10px 40px;
+            transition: 0.6s var(--ease-premium); display: flex; flex-direction: column; gap: 2px; overflow-y: auto;
+        }
+        #theme-panel.active { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.8); }
+        
+        .theme-option {
+            padding: 10px 12px; border-radius: 6px; font-family: 'JetBrains Mono'; font-size: 0.55rem;
+            color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s;
+        }
+        .theme-option:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .theme-option.active { color: var(--sky-bright); background: rgba(255, 255, 255, 0.05); font-weight: 800; border-right: 2px solid var(--sky-bright); }
+        .theme-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+        /* --- LOADING SCREEN --- */
+        #loader { 
+            position: fixed; inset: 0; z-index: 20000; background: var(--bg-void); 
+            display: flex; flex-direction: column; justify-content: space-between; 
+            align-items: center; overflow: hidden; padding: 8vh 20px; 
+        }
+
+        .loader-welcome-container { flex: 1; display: flex; align-items: center; justify-content: center; }
+        .loader-welcome { font-family: 'JetBrains Mono'; font-size: clamp(2rem, 8vw, 4rem); font-weight: 800; color: var(--sky-bright); letter-spacing: 15px; text-shadow: 0 0 20px var(--sky-glow); opacity: 0; animation: welcome-fade 1s ease forwards 0.5s; text-align: center; }
+
+        @keyframes welcome-fade { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- ROBOT --- */
+        .robot-stage-container { flex: 2; display: flex; align-items: center; justify-content: center; perspective: 1000px; }
+        .robot-stage { position: relative; width: 240px; height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .robot-head { width: 80px; height: 65px; background: #000; border: 2px solid var(--sky-bright); border-radius: 12px; display: flex; justify-content: space-around; align-items: center; padding: 0 15px; position: relative; z-index: 10; box-shadow: 0 0 30px var(--sky-glow); animation: robot-float 3s ease-in-out infinite; overflow: hidden; }
+        .robot-head::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0) 50%, rgba(0,210,255,0.1) 50%); background-size: 100% 4px; pointer-events: none; opacity: 0.3; }
+        .robot-eye { width: 10px; height: 10px; background: var(--sky-bright); border-radius: 50%; box-shadow: 0 0 10px var(--sky-bright); animation: eye-blink 4s infinite; }
+        .robot-body { width: 100px; height: 85px; background: #000; border: 2px solid #222; border-radius: 12px; margin-top: 15px; position: relative; z-index: 5; display: flex; justify-content: center; align-items: center; animation: robot-float 3s ease-in-out infinite 0.2s; }
+        .body-text { font-family: 'JetBrains Mono'; font-size: 0.5rem; color: var(--sky-bright); opacity: 0.6; letter-spacing: 1px; }
+        .shoulder { position: absolute; width: 18px; height: 18px; background: #111; border: 2px solid var(--border-ui); border-radius: 50%; top: 120px; z-index: 15; }
+        .shoulder.left { left: 60px; }
+        .shoulder.right { right: 60px; }
+        .upper-arm-right { position: absolute; width: 10px; height: 45px; background: #000; border: 2px solid var(--sky-bright); border-radius: 5px; top: 130px; right: 64px; transform-origin: top center; animation: human-shoulder 6s ease-in-out infinite; }
+        .forearm-right { position: absolute; width: 10px; height: 40px; background: #000; border: 2px solid var(--sky-bright); border-radius: 5px; top: 38px; left: -2px; transform-origin: top center; animation: human-elbow 6s ease-in-out infinite; }
+        .hand-right { position: absolute; width: 16px; height: 18px; background: var(--sky-bright); border-radius: 4px; top: 35px; left: -5px; box-shadow: 0 0 15px var(--sky-bright); transform-origin: top center; animation: human-wrist 6s ease-in-out infinite; }
+        .upper-arm-left { position: absolute; width: 10px; height: 45px; background: #000; border: 2px solid var(--sky-bright); border-radius: 5px; top: 130px; left: 64px; transform-origin: top center; animation: human-shoulder-left 6s ease-in-out infinite; }
+        .forearm-left { position: absolute; width: 10px; height: 40px; background: #000; border: 2px solid var(--sky-bright); border-radius: 5px; top: 38px; left: -2px; transform-origin: top center; animation: human-elbow-left 6s ease-in-out infinite; }
+        .hand-left { position: absolute; width: 16px; height: 18px; background: var(--sky-bright); border-radius: 4px; top: 35px; left: -5px; box-shadow: 0 0 15px var(--sky-bright); transform-origin: top center; animation: human-wrist-left 6s ease-in-out infinite; }
+        .leg-container { display: flex; gap: 20px; margin-top: 15px; animation: robot-float 3s ease-in-out infinite 0.4s; }
+        .leg { width: 12px; height: 35px; background: #000; border: 2px solid var(--sky-bright); border-radius: 4px; }
+        @keyframes human-shoulder { 0%, 45%, 100% { transform: rotate(20deg); } 15%, 35% { transform: rotate(-100deg); } }
+        @keyframes human-elbow { 0%, 45%, 100% { transform: rotate(10deg); } 18%, 32% { transform: rotate(-80deg); } 25% { transform: rotate(-30deg); } }
+        @keyframes human-wrist { 0%, 45%, 100% { transform: rotate(0deg); } 22% { transform: rotate(-30deg); } 28% { transform: rotate(30deg); } }
+        @keyframes human-shoulder-left { 0%, 50% { transform: rotate(-20deg); } 65%, 85% { transform: rotate(100deg); } 100% { transform: rotate(-20deg); } }
+        @keyframes human-elbow-left { 0%, 50% { transform: rotate(-10deg); } 68%, 82% { transform: rotate(80deg); } 75% { transform: rotate(30deg); } 100% { transform: rotate(-10deg); } }
+        @keyframes human-wrist-left { 0%, 50% { transform: rotate(0deg); } 72% { transform: rotate(30deg); } 78% { transform: rotate(-30deg); } 100% { transform: rotate(0deg); } }
+        @keyframes robot-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes eye-blink { 0%, 45%, 55%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0); } }
+
+        /* --- FRAME SYSTEM --- */
+        .page-frame { 
+            position: fixed; inset: var(--frame-padding); 
+            border: 2px solid var(--border-ui);
+            border-bottom: none; 
+            pointer-events: none; 
+            z-index: 9999; overflow: hidden; transition: all 0.5s ease;
+        }
+        
+        /* The Bottom Static Line: Only visible at contact */
+        .bottom-frame-line {
+            position: fixed; bottom: var(--frame-padding); left: var(--frame-padding); right: var(--frame-padding);
+            height: 2px; background: var(--border-ui); z-index: 9999; pointer-events: none; 
+            opacity: 0; transform: scaleX(0.9);
+            transition: opacity 0.6s var(--ease-premium), transform 0.8s var(--ease-premium);
+        }
+        .bottom-frame-line.active { opacity: 1; transform: scaleX(1); }
+
+        .tracer { 
+            position: absolute; 
+            background: var(--sky-bright); 
+            z-index: 10000; 
+            box-shadow: 0 0 10px var(--sky-bright), 0 0 25px var(--sky-glow); 
+            border-radius: 20px; 
+            opacity: 0;
+            transition: background 0.5s ease, box-shadow 0.5s ease;
+        }
+        .t-horiz { height: var(--tracer-size); top: -2px; }
+        .t-vert { width: var(--tracer-size); left: -2px; }
+        
+        /* Contact specific tracer positioning */
+        .t-bottom-edge { bottom: -2px; top: auto; opacity: 0 !important; pointer-events: none; }
+        .t-bottom-edge.visible { opacity: 1 !important; }
+        
+        .t-right-edge { right: -2px; left: auto; }
+
+        /* --- SECTION DIVIDERS --- */
+        .section-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, var(--border-ui), transparent); margin: 40px 0; position: relative; }
+        .section-divider::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: var(--sky-bright); border-radius: 50%; box-shadow: 0 0 10px var(--sky-bright); }
+
+        /* --- CONTENT STYLES --- */
+        nav { position: fixed; top: var(--frame-padding); left: var(--frame-padding); right: var(--frame-padding); height: 80px; display: flex; justify-content: space-between; align-items: center; z-index: 10000; padding: 0 40px; background: rgba(2, 4, 10, 0.4); backdrop-filter: blur(20px); border-bottom: 2px solid var(--border-ui); }
+        .brand-logo { font-weight: 800; font-size: 0.9rem; color: var(--sky-bright); text-decoration: none; font-family: 'JetBrains Mono'; display: flex; align-items: center; gap: 12px; letter-spacing: 2px; }
+        .nav-links { display: flex; gap: 30px; align-items: center; }
+        .nav-item { text-decoration: none; color: var(--text-dim); font-family: 'JetBrains Mono'; font-size: 0.7rem; letter-spacing: 1px; transition: 0.4s; }
+        .nav-item:hover { color: var(--sky-bright); text-shadow: 0 0 10px var(--sky-glow); }
+
+        #cursor-point { position: fixed; width: 6px; height: 6px; background: #fff; border-radius: 50%; pointer-events: none; z-index: 10002; mix-blend-mode: exclusion; }
+        
+        section { padding: 140px 10vw 100px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        .reveal { opacity: 0; transform: translateY(30px); }
+
+        .hero-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .hero-wrap h1 { font-size: clamp(3.5rem, 12vw, 9rem); font-weight: 900; line-height: 0.85; letter-spacing: -4px; margin-bottom: 20px; }
+        .outline { color: transparent; -webkit-text-stroke: 1.5px var(--text-main); opacity: 0.3; }
+
+        /* --- CATEGORIES FILTER --- */
+        .filter-container { margin-bottom: 50px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; }
+        .filter-btn { 
+            background: transparent; border: 1px solid var(--border-ui); color: var(--text-dim); 
+            font-family: 'JetBrains Mono'; font-size: 0.65rem; padding: 10px 24px; border-radius: 30px; 
+            cursor: pointer; transition: 0.3s var(--ease-premium); letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .filter-btn:hover { border-color: var(--sky-bright); color: #fff; transform: translateY(-2px); }
+        .filter-btn.active { 
+            background: var(--sky-bright); color: var(--bg-void); 
+            border-color: var(--sky-bright); font-weight: 800; 
+            box-shadow: 0 0 20px var(--sky-glow); 
+        }
+
+        /* --- PROJECTS GRID --- */
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 30px; width: 100%; max-width: 1200px; margin-top: 20px; }
+        
+        .project-card { 
+            position: relative; height: 450px; background: rgba(255,255,255,0.02); 
+            border: 1px solid var(--border-ui); border-radius: 20px; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: flex-end; padding: 40px;
+            transition: 0.6s var(--ease-premium), opacity 0.4s ease, transform 0.4s ease; transform-style: preserve-3d;
+        }
+
+        .project-card.hidden { display: none; }
+
+        .project-card::before { 
+            content: ''; position: absolute; inset: 0; 
+            background: linear-gradient(to bottom, transparent 30%, rgba(2, 4, 10, 0.9) 90%); 
+            z-index: 1; transition: 0.4s;
+        }
+
+        .project-visual {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center; opacity: 0.2;
+            transition: 1s var(--ease-premium); filter: grayscale(1);
+        }
+
+        .project-card:hover .project-visual { opacity: 0.5; transform: scale(1.1) rotate(-1deg); filter: grayscale(0); }
+
+        .project-content { position: relative; z-index: 2; transform: translateZ(50px); }
+        .project-tag { font-family: 'JetBrains Mono'; color: var(--sky-bright); font-size: 0.6rem; letter-spacing: 2px; margin-bottom: 12px; display: block; }
+        .project-card h3 { font-size: 2rem; font-weight: 800; margin-bottom: 15px; transform: translateY(10px); transition: 0.4s var(--ease-premium); }
+        .project-card p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; opacity: 0; transform: translateY(20px); transition: 0.5s var(--ease-premium); }
+        
+        .project-card:hover h3 { transform: translateY(0); }
+        .project-card:hover p { opacity: 1; transform: translateY(0); }
+
+        .project-card:hover { border-color: var(--sky-bright); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+
+        .scan-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--sky-bright), transparent);
+            opacity: 0; pointer-events: none; z-index: 3;
+        }
+        .project-card:hover .scan-line { animation: project-scan 2.5s linear infinite; opacity: 0.6; }
+        @keyframes project-scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* --- CONTACT --- */
+        .contact-container { 
+            width: 100%; max-width: 900px; display: grid; grid-template-columns: 1.2fr 0.8fr; 
+            background: var(--bg-surface); border: 2px solid var(--border-ui); 
+            border-radius: 24px; overflow: hidden; position: relative;
+        }
+
+        .contact-main { padding: 60px; border-right: 2px solid var(--border-ui); }
+        .contact-sidebar { padding: 60px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 40px; }
+
+        .input-group { position: relative; margin-bottom: 30px; }
+        .form-control { 
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--border-ui); 
+            padding: 15px 0; color: #fff; font-family: inherit; font-size: 1rem; transition: 0.3s;
+        }
+        .form-control:focus { outline: none; border-bottom-color: var(--sky-bright); }
+        
+        .input-label { 
+            position: absolute; left: 0; top: 15px; color: var(--text-dim); 
+            font-family: 'JetBrains Mono'; font-size: 0.7rem; pointer-events: none; 
+            transition: 0.3s var(--ease-premium); text-transform: uppercase;
+        }
+        .form-control:focus ~ .input-label,
+        .form-control:not(:placeholder-shown) ~ .input-label {
+            top: -10px; color: var(--sky-bright); font-size: 0.6rem;
+        }
+
+        .submit-btn { 
+            background: transparent; color: var(--sky-bright); border: 1px solid var(--sky-bright); 
+            padding: 20px 40px; border-radius: 4px; font-weight: 800; font-family: 'JetBrains Mono'; 
+            cursor: pointer; transition: 0.4s; width: 100%; letter-spacing: 2px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .submit-btn:hover { background: var(--sky-bright); color: var(--bg-void); box-shadow: 0 0 30px var(--sky-glow); }
+
+        .info-block h4 { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: var(--sky-bright); letter-spacing: 2px; margin-bottom: 10px; }
+        .info-block p { font-size: 0.9rem; color: var(--text-main); }
+
+        @media (max-width: 900px) { 
+            nav { padding: 0 20px; } 
+            .theme-display-capsule { display: none; } 
+            :root { --frame-padding: 15px; } 
+            .contact-container { grid-template-columns: 1fr; }
+            .contact-main, .contact-sidebar { padding: 30px; }
+            .projects-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOADER -->
+    <div id="loader">
+        <div class="loader-welcome-container">
+            <h1 class="loader-welcome">WELCOME</h1>
+        </div>
+        
+        <div class="robot-stage-container">
+            <div class="robot-stage">
+                <div class="shoulder left"></div>
+                <div class="shoulder right"></div>
+                
+                <div class="upper-arm-left">
+                    <div class="forearm-left">
+                        <div class="hand-left"></div>
+                    </div>
+                </div>
+
+                <div class="upper-arm-right">
+                    <div class="forearm-right">
+                        <div class="hand-right"></div>
+                    </div>
+                </div>
+
+                <div class="robot-head">
+                    <div class="robot-eye"></div>
+                    <div class="robot-eye"></div>
+                </div>
+                <div class="robot-body">
+                    <span class="body-text">ALDO_BOT_PRO</span>
+                </div>
+                <div class="leg-container">
+                    <div class="leg"></div>
+                    <div class="leg"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; width: 100%;">
+            <div style="font-family:'JetBrains Mono'; color:var(--text-dim); font-size:0.7rem; letter-spacing:8px; margin-bottom: 25px;">LOADING</div>
+            <div style="width:220px; height:2px; background:rgba(255,255,255,0.05); position:relative; overflow:hidden;">
+                <div id="load-bar" style="position:absolute; top:0; left:0; height:100%; width:0%; background:var(--sky-bright); box-shadow:0 0 10px var(--sky-bright);"></div>
+            </div>
+            <div id="status-text" style="margin-top:15px; font-family:'JetBrains Mono'; color:var(--sky-bright); font-size:0.6rem; letter-spacing:3px; opacity:0.6;">SEQUENCING_MOTOR_TASKS</div>
+        </div>
+    </div>
+
+    <!-- THEME PANEL -->
+    <div id="theme-panel">
+        <div style="font-family:'JetBrains Mono'; color:#fff; font-size:0.6rem; letter-spacing:2px; margin-bottom:15px; opacity:0.4; padding-left:10px;">CORE_SKINS_V2</div>
+    </div>
+
+    <!-- FRAME -->
+    <div class="page-frame" id="main-frame"></div>
+    <div class="bottom-frame-line" id="bottom-line"></div>
+    
+    <div id="cursor-point"></div>
+
+    <nav>
+        <a href="#" class="brand-logo"><span>ALDO KRIEK</span></a>
+        <div class="theme-display-capsule">
+            <span class="theme-label" id="theme-name">CYBER SKY</span>
+        </div>
+        <div class="nav-links">
+            <a href="#home" class="nav-item">HOME</a>
+            <a href="#projects" class="nav-item">PROJECTS</a>
+            <a href="#contact" class="nav-item">CONTACT</a>
+            <button class="theme-trigger-btn" id="theme-btn">
+                <i data-lucide="palette" size="16" color="var(--sky-bright)"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+        <section id="home">
+            <div class="hero-wrap reveal">
+                <span style="font-family:'JetBrains Mono'; color:var(--sky-bright); font-size:0.7rem; letter-spacing:4px; margin-bottom: 20px;">SOFTWARE_ENGINEER</span>
+                <h1>ALDO <span class="outline">KRIEK</span></h1>
+                <p style="color:var(--text-dim); font-size:1.1rem; max-width:600px; line-height: 1.8;">Full-stack architect building interactive digital experiences and high-performance interfaces.</p>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section id="projects">
+             <div class="reveal" style="text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center;">
+                 <h2 style="font-size:3.5rem; margin-bottom: 20px; letter-spacing: -2px;">MY PROJECTS</h2>
+                 
+                 <div class="filter-container">
+                    <button class="filter-btn active" data-filter="all">ALL_FILES</button>
+                    <button class="filter-btn" data-filter="infra">INFRASTRUCTURE</button>
+                    <button class="filter-btn" data-filter="algorithm">ALGORITHM</button>
+                    <button class="filter-btn" data-filter="simulation">SIMULATION</button>
+                 </div>
+
+                 <div class="projects-grid" id="projects-grid">
+                    <div class="project-card" data-category="infra" style="--bg-url: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800')">
+                        <div class="scan-line"></div>
+                        <div class="project-visual" style="background-image: var(--bg-url)"></div>
+                        <div class="project-content">
+                            <span class="project-tag">INFRASTRUCTURE // REACT</span>
+                            <h3>CloudNexus</h3>
+                            <p>Enterprise-grade dashboard for monitoring distributed server architecture with real-time telemetry.</p>
+                        </div>
+                    </div>
+
+                    <div class="project-card" data-category="algorithm" style="--bg-url: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800')">
+                        <div class="scan-line"></div>
+                        <div class="project-visual" style="background-image: var(--bg-url)"></div>
+                        <div class="project-content">
+                            <span class="project-tag">ALGORITHM // WASM</span>
+                            <h3>CoreEngine V2</h3>
+                            <p>High-performance calculation engine compiled to WebAssembly for sub-millisecond data processing.</p>
+                        </div>
+                    </div>
+
+                    <div class="project-card" data-category="simulation" style="--bg-url: url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=800')">
+                        <div class="scan-line"></div>
+                        <div class="project-visual" style="background-image: var(--bg-url)"></div>
+                        <div class="project-content">
+                            <span class="project-tag">SIMULATION // GLSL</span>
+                            <h3>VoidShader</h3>
+                            <p>Interactive procedural environment generator using custom GLSL fragment shaders.</p>
+                        </div>
+                    </div>
+                 </div>
+             </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section id="contact">
+             <div class="reveal" style="text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center;">
+                 <h2 style="font-size:3.5rem; margin-bottom: 40px;">Contact</h2>
+                 
+                 <div class="contact-container">
+                    <div class="contact-main">
+                        <form id="contact-form">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder=" " id="form-name" required>
+                                <label class="input-label" for="form-name">System.Identification</label>
+                            </div>
+                            <div class="input-group">
+                                <input type="email" class="form-control" placeholder=" " id="form-email" required>
+                                <label class="input-label" for="form-email">Network.Protocol (Email)</label>
+                            </div>
+                            <div class="input-group">
+                                <textarea class="form-control" rows="4" placeholder=" " id="form-msg" required></textarea>
+                                <label class="input-label" for="form-msg">Transmission.Packet (Message)</label>
+                            </div>
+                            <button type="submit" class="submit-btn" id="submit-signal">
+                                <i data-lucide="send" size="16"></i>
+                                SEND_SIGNAL
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="contact-sidebar">
+                        <div class="info-block" style="text-align: left;">
+                            <h4>LOCATION_COORD</h4>
+                            <p>Johannesburg, ZA <br> 26.2041° S, 28.0473° E</p>
+                        </div>
+                        <div class="info-block" style="text-align: left;">
+                            <h4>SOCIAL_NODES</h4>
+                            <div style="display: flex; gap: 15px; margin-top: 10px;">
+                                <i data-lucide="github" size="18" style="cursor: pointer; color: var(--text-dim);"></i>
+                                <i data-lucide="linkedin" size="18" style="cursor: pointer; color: var(--text-dim);"></i>
+                                <i data-lucide="twitter" size="18" style="cursor: pointer; color: var(--text-dim);"></i>
+                            </div>
+                        </div>
+                        <div class="info-block" style="text-align: left; opacity: 0.5;">
+                            <h4>STATUS</h4>
+                            <p style="font-family: 'JetBrains Mono'; font-size: 0.7rem; color: var(--sky-bright);" id="system-status">SYSTEMS_NOMINAL</p>
+                        </div>
+                    </div>
+                 </div>
+             </div>
+        </section>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // --- THEME ENGINE ---
+        const themes = [
+            { name: "Cyber Sky", main: "#00d2ff", bg: "#02040a", surface: "#0a0f1a" },
+            { name: "Neon Pulse", main: "#ff00ff", bg: "#0a020a", surface: "#1a0a1a" },
+            { name: "Matrix", main: "#00ff41", bg: "#000800", surface: "#001500" },
+            { name: "Lava Core", main: "#ff4d00", bg: "#0a0402", surface: "#1a0f0a" },
+            { name: "Obsidian", main: "#ffffff", bg: "#000000", surface: "#080808" },
+            { name: "Deep Sea", main: "#0066ff", bg: "#000510", surface: "#001020" },
+            { name: "Golden Ratio", main: "#ffcc00", bg: "#0a0800", surface: "#1a1500" },
+            { name: "Ultraviolet", main: "#9900ff", bg: "#080010", surface: "#150020" },
+            { name: "Emerald", main: "#50ffb0", bg: "#020a08", surface: "#0a1a15" },
+            { name: "Solaris", main: "#ff9900", bg: "#0a0500", surface: "#201000" },
+            { name: "Arctic", main: "#a0e0ff", bg: "#050a10", surface: "#101a25" },
+            { name: "Blood Moon", main: "#ff3030", bg: "#100000", surface: "#200505" },
+            { name: "Synthwave", main: "#f030ff", bg: "#100020", surface: "#200040" },
+            { name: "Hackerspace", main: "#33ff33", bg: "#001000", surface: "#052005" },
+            { name: "Titanium", main: "#e0e0e0", bg: "#101010", surface: "#1a1a1a" },
+            { name: "Rose Gold", main: "#ff99cc", bg: "#100508", surface: "#200a10" },
+            { name: "Vaporwave", main: "#00ffcc", bg: "#1a0033", surface: "#2b0052" },
+            { name: "Midnight", main: "#4d4dff", bg: "#000010", surface: "#000025" },
+            { name: "Ghost", main: "#ffffff", bg: "#ffffff", surface: "#f0f0f0", text: "#111" },
+            { name: "Carbon", main: "#555555", bg: "#050505", surface: "#111111" },
+            { name: "Toxic", main: "#ccff00", bg: "#080a00", surface: "#151a00" },
+            { name: "Stellar", main: "#80ffff", bg: "#000a0a", surface: "#001a1a" },
+            { name: "Royal", main: "#ffd700", bg: "#100a00", surface: "#201a00" },
+            { name: "Nebula", main: "#ff0099", bg: "#0a000a", surface: "#200020" },
+            { name: "Forest", main: "#00ff66", bg: "#000a05", surface: "#002010" },
+            { name: "Ice Cap", main: "#00ffff", bg: "#000a0a", surface: "#002020" },
+            { name: "Electric", main: "#ffff00", bg: "#0a0a00", surface: "#202000" },
+            { name: "Mars", main: "#ff6600", bg: "#100500", surface: "#251000" },
+            { name: "Void", main: "#000000", bg: "#000000", surface: "#050505" },
+            { name: "Pharaoh", main: "#c0a060", bg: "#0a0805", surface: "#1a1510" },
+            { name: "Cobalt", main: "#0044ff", bg: "#000510", surface: "#001025" },
+            { name: "Crimson", main: "#dc143c", bg: "#0a0002", surface: "#1a0005" },
+            { name: "Amber", main: "#ffbf00", bg: "#0a0800", surface: "#1a1500" },
+            { name: "Orchid", main: "#da70d6", bg: "#0a000a", surface: "#1a0515" },
+            { name: "Turquoise", main: "#40e0d0", bg: "#000a0a", surface: "#051a1a" }
+        ];
+
+        const panel = document.getElementById('theme-panel');
+        const themeBtn = document.getElementById('theme-btn');
+        const themeDisplay = document.getElementById('theme-name');
+
+        themes.forEach((theme, i) => {
+            const opt = document.createElement('div');
+            opt.className = `theme-option ${i === 0 ? 'active' : ''}`;
+            opt.innerHTML = `<div class="theme-dot" style="background:${theme.main}"></div>${theme.name.toUpperCase()}`;
+            opt.onclick = (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('active'));
+                opt.classList.add('active');
+                applyTheme(theme);
+                panel.classList.remove('active');
+            };
+            panel.appendChild(opt);
+        });
+
+        function applyTheme(theme) {
+            const r = document.documentElement;
+            const isLight = theme.bg === "#ffffff";
+            r.style.setProperty('--sky-bright', theme.main);
+            r.style.setProperty('--sky-glow', theme.main + 'cc');
+            r.style.setProperty('--bg-void', theme.bg);
+            r.style.setProperty('--bg-surface', theme.surface);
+            r.style.setProperty('--border-ui', theme.main + '33');
+            if (isLight) {
+                r.style.setProperty('--text-main', '#111');
+                r.style.setProperty('--text-dim', '#444');
+            } else {
+                r.style.setProperty('--text-main', '#e2e8f0');
+                r.style.setProperty('--text-dim', '#94a3b8');
+            }
+            themeDisplay.innerText = theme.name.toUpperCase();
+            setTimeout(() => {
+                const icon = themeBtn.querySelector('i');
+                if(icon) icon.setAttribute('color', theme.main);
+                lucide.createIcons();
+            }, 0);
+        }
+
+        themeBtn.onclick = (e) => { e.stopPropagation(); panel.classList.toggle('active'); };
+        document.onclick = () => panel.classList.remove('active');
+
+        // --- TRACER ENGINE ---
+        const initTracers = () => {
+            const frame = document.getElementById('main-frame');
+            const configs = [
+                { class: 't-horiz', axis: 'left', prop: 'width', side: 'top' }, 
+                { class: 't-horiz t-bottom-edge', axis: 'right', prop: 'width', side: 'bottom' },
+                { class: 't-vert', axis: 'top', prop: 'height', side: 'left' },
+                { class: 't-vert t-right-edge', axis: 'bottom', prop: 'height', side: 'right' }
+            ];
+
+            configs.forEach(cfg => {
+                for(let i = 0; i < 4; i++) {
+                    const tracer = document.createElement('div');
+                    tracer.className = `tracer ${cfg.class}`;
+                    frame.appendChild(tracer);
+                    animateTracer(tracer, cfg, Math.random() > 0.5 ? 1 : -1);
+                }
+            });
+        };
+
+        const animateTracer = (el, cfg, direction) => {
+            const randomLength = Math.floor(Math.random() * 300) + 400; 
+            const duration = Math.random() * 3 + 2; 
+            const delay = Math.random() * 1.5;
+            el.style[cfg.prop] = `${randomLength}px`;
+            const startPos = direction === 1 ? `-${randomLength}px` : "100%";
+            const endPos = direction === 1 ? "100%" : `-${randomLength}px`;
+            gsap.fromTo(el, 
+                { [cfg.axis]: startPos, opacity: 0 },
+                { 
+                    [cfg.axis]: endPos, 
+                    opacity: 1, 
+                    duration: duration, 
+                    delay: delay,
+                    ease: "none", 
+                    onComplete: () => animateTracer(el, cfg, direction)
+                }
+            );
+        };
+
+        // --- BOTTOM BORDER SCROLL SENSOR ---
+        function initScrollTriggers() {
+            const contactSection = document.getElementById('contact');
+            const bottomLine = document.getElementById('bottom-line');
+            const bottomTracers = document.querySelectorAll('.t-bottom-edge');
+
+            gsap.to({}, {
+                scrollTrigger: {
+                    trigger: contactSection,
+                    start: "top 80%", 
+                    end: "bottom bottom",
+                    onEnter: () => {
+                        bottomLine.classList.add('active');
+                        bottomTracers.forEach(t => t.classList.add('visible'));
+                    },
+                    onLeaveBack: () => {
+                        bottomLine.classList.remove('active');
+                        bottomTracers.forEach(t => t.classList.remove('visible'));
+                    }
+                }
+            });
+        }
+
+        // --- 3D CARD HOVER & FILTER ---
+        function initProjects() {
+            const cards = document.querySelectorAll('.project-card');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            cards.forEach(card => {
+                card.addEventListener('mousemove', e => {
+                    const rect = card.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    gsap.to(card, {
+                        rotationY: x * 15,
+                        rotationX: -y * 15,
+                        transformPerspective: 1000,
+                        duration: 0.3
+                    });
+                });
+                card.addEventListener('mouseleave', () => {
+                    gsap.to(card, { rotationY: 0, rotationX: 0, duration: 0.5 });
+                });
+            });
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.dataset.filter;
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    gsap.to(cards, {
+                        opacity: 0,
+                        scale: 0.8,
+                        duration: 0.3,
+                        stagger: 0.05,
+                        onComplete: () => {
+                            cards.forEach(card => {
+                                if (category === 'all' || card.dataset.category === category) {
+                                    card.classList.remove('hidden');
+                                } else {
+                                    card.classList.add('hidden');
+                                }
+                            });
+                            const visibleCards = Array.from(cards).filter(c => !c.classList.contains('hidden'));
+                            gsap.to(visibleCards, {
+                                opacity: 1,
+                                scale: 1,
+                                duration: 0.5,
+                                stagger: 0.1,
+                                ease: "back.out(1.7)"
+                            });
+                        }
+                    });
+                });
+            });
+        }
+
+        // --- LOADING SEQUENCE ---
+        const statusText = document.getElementById('status-text');
+        const loadingSteps = ["INITIALIZING", "MOTORS", "TRACERS", "SYNCING", "READY"];
+        
+        window.onload = () => {
+            initTracers();
+            initProjects();
+            initScrollTriggers();
+            
+            let step = 0;
+            const stepInterval = setInterval(() => {
+                if (step < loadingSteps.length) { 
+                    statusText.innerText = loadingSteps[step]; 
+                    step++; 
+                } else { 
+                    clearInterval(stepInterval); 
+                }
+            }, 800);
+
+            gsap.to("#load-bar", { 
+                width: "100%", 
+                duration: 4.5, 
+                ease: "power2.inOut",
+                onComplete: () => {
+                    gsap.to("#loader", { 
+                        opacity: 0, 
+                        duration: 0.8, 
+                        onComplete: () => {
+                            document.getElementById('loader').style.display = 'none';
+                            gsap.to(".reveal", { opacity: 1, y: 0, stagger: 0.2, duration: 1.2, ease: "expo.out" });
+                        }
+                    });
+                }
+            });
+        };
+
+        const cp = document.getElementById('cursor-point');
+        document.onmousemove = e => { gsap.to(cp, { x: e.clientX - 3, y: e.clientY - 3, duration: 0.1 }); };
+
+        document.getElementById('contact-form').onsubmit = (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-signal');
+            const originalText = btn.innerHTML;
+            const statusNode = document.getElementById('system-status');
+            btn.innerHTML = 'SYNCING_DATA...';
+            btn.style.borderColor = '#fff';
+            statusNode.innerText = "TRANSMITTING...";
+            setTimeout(() => {
+                btn.innerHTML = 'SIGNAL_TRANSMITTED';
+                btn.style.background = 'var(--sky-bright)';
+                btn.style.color = 'var(--bg-void)';
+                statusNode.innerText = "SUCCESS_PACKET_SENT";
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--sky-bright)';
+                    statusNode.innerText = "SYSTEMS_NOMINAL";
+                    e.target.reset();
+                }, 3000);
+            }, 1500);
+        };
+    </script>
+</body>
+</html>
